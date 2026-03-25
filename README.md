@@ -14,7 +14,7 @@ ACGN Miku-inspired colorscheme for Neovim (dark + light).
 
 ```lua
 {
-  dir = "~/path/to/miku.nvim", -- or "yourname/miku.nvim"
+  "xiaobin118/miku.nvim"
   priority = 1000,
   lazy = false,
   config = function()
