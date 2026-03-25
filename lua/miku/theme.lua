@@ -4,88 +4,95 @@ local function hi(group, spec)
     vim.api.nvim_set_hl(0, group, spec)
 end
 
-local function link(group, target)
-    vim.api.nvim_set_hl(0, group, { link = target })
-end
-
 function M.apply(p, opts)
-    local bg = opts.transparent and "NONE" or p.bg
+    local bg = opts.transparent_background and "NONE" or p.bg
+    local bg_float = opts.transparent_background and "NONE" or p.bg_float
+    local bg_dark = opts.transparent_background and "NONE" or p.bg_dark
 
     vim.cmd("highlight clear")
     if vim.fn.exists("syntax_on") == 1 then vim.cmd("syntax reset") end
     vim.o.termguicolors = true
     vim.g.colors_name = "miku"
 
-    -- Core UI
+    -- User styles
+    local c_style = opts.styles.comments or { italic = true }
+    local k_style = opts.styles.keywords or {}
+    local f_style = opts.styles.functions or {}
+    local v_style = opts.styles.variables or {}
+
+    -- 🌌 Core UI
     hi("Normal", { fg = p.fg, bg = bg })
     hi("NormalNC", { fg = p.fg2, bg = bg })
-    hi("EndOfBuffer", { fg = p.bg3, bg = bg })
-
-    hi("CursorLine", { bg = p.bg2 })
-    hi("CursorLineNr", { fg = p.miku, bold = true })
-    hi("LineNr", { fg = p.muted })
+    hi("EndOfBuffer", { fg = p.bg, bg = bg }) -- Hides the '~' at end of file
     hi("SignColumn", { bg = bg })
 
-    hi("Visual", { bg = p.bg3 })
+    -- 🔦 Cursors & Selections
+    hi("CursorLine", { bg = p.bg_visual })
+    hi("CursorLineNr", { fg = p.miku, bold = true })
+    hi("LineNr", { fg = p.muted })
+    hi("Visual", { bg = p.bg_visual })
     hi("Search", { fg = p.bg, bg = p.yellow, bold = true })
-    hi("IncSearch", { fg = p.bg, bg = p.sand, bold = true })
+    hi("IncSearch", { fg = p.bg, bg = p.orange, bold = true })
 
+    -- 🪟 Windows, Borders, and Floats (The "Catppuccin" rich UI feel)
     hi("WinSeparator", { fg = p.border })
     hi("VertSplit", { fg = p.border })
+    hi("NormalFloat", { fg = p.fg, bg = bg_float })
+    hi("FloatBorder", { fg = p.border_focus, bg = bg_float })
+    hi("FloatTitle", { fg = p.miku, bg = bg_float, bold = true })
 
-    hi("FloatBorder", { fg = p.border, bg = p.bg2 })
-    hi("NormalFloat", { fg = p.fg2, bg = p.bg2 })
-
-    hi("Pmenu", { fg = p.fg2, bg = p.bg2 })
+    -- 📋 Popup Menus (Autocomplete)
+    hi("Pmenu", { fg = p.fg2, bg = bg_float })
     hi("PmenuSel", { fg = p.bg, bg = p.miku, bold = true })
-    hi("PmenuSbar", { bg = p.bg3 })
+    hi("PmenuSbar", { bg = bg_dark })
     hi("PmenuThumb", { bg = p.muted })
 
-    hi("StatusLine", { fg = p.fg2, bg = p.bg2 })
-    hi("StatusLineNC", { fg = p.muted, bg = p.bg2 })
+    -- 🎨 Syntax (Richer mapping)
+    hi("Comment", vim.tbl_extend("keep", { fg = p.muted }, c_style))
+    hi("Keyword", vim.tbl_extend("keep", { fg = p.purple }, k_style))    -- Swapped to purple for magic
+    hi("Function", vim.tbl_extend("keep", { fg = p.miku }, f_style))
+    hi("Identifier", vim.tbl_extend("keep", { fg = p.fg }, v_style))
 
-    -- Basic syntax (fallback)
-    hi("Comment", { fg = p.muted, italic = true })
     hi("String", { fg = p.green })
-    hi("Number", { fg = p.sand })
-    hi("Boolean", { fg = p.sand })
-    hi("Function", { fg = p.miku })
-    hi("Identifier", { fg = p.fg })
-    hi("Keyword", { fg = p.sky })
-    hi("Operator", { fg = p.miku2 })
-    hi("Type", { fg = p.miku2 })
-    hi("Constant", { fg = p.sand })
+    hi("Number", { fg = p.orange })
+    hi("Boolean", { fg = p.pink, bold = true })    -- Pinks make booleans pop!
+    hi("Operator", { fg = p.sky })
+    hi("Type", { fg = p.sand })
+    hi("Constant", { fg = p.pink })
     hi("Special", { fg = p.yellow })
-    hi("MatchParen", { fg = p.yellow, bold = true })
+    hi("MatchParen", { fg = p.bg, bg = p.miku, bold = true })
 
-    -- Diagnostics
+    -- 🐛 Diagnostics
     hi("DiagnosticError", { fg = p.red })
     hi("DiagnosticWarn", { fg = p.orange })
     hi("DiagnosticInfo", { fg = p.sky })
-    hi("DiagnosticHint", { fg = p.miku })
+    hi("DiagnosticHint", { fg = p.miku2 })
 
-    -- GitSigns
-    hi("GitSignsAdd", { fg = p.green })
-    hi("GitSignsChange", { fg = p.sand })
-    hi("GitSignsDelete", { fg = p.red })
+    hi("DiagnosticVirtualTextError", { fg = p.red, bg = opts.transparent_background and "NONE" or "#2B161B" })
+    hi("DiagnosticVirtualTextWarn", { fg = p.orange, bg = opts.transparent_background and "NONE" or "#2B2118" })
+    hi("DiagnosticVirtualTextInfo", { fg = p.sky, bg = opts.transparent_background and "NONE" or "#162838" })
+    hi("DiagnosticVirtualTextHint", { fg = p.miku2, bg = opts.transparent_background and "NONE" or "#122730" })
 
-    -- Treesitter (links)
-    link("@comment", "Comment")
-    link("@string", "String")
-    link("@number", "Number")
-    link("@boolean", "Boolean")
-    link("@function", "Function")
-    link("@keyword", "Keyword")
-    link("@operator", "Operator")
-    link("@type", "Type")
-    link("@constant", "Constant")
-    link("@variable", "Identifier")
+    -- 🌿 Git
+    hi("GitSignsAdd", { fg = p.green, bg = bg })
+    hi("GitSignsChange", { fg = p.sand, bg = bg })
+    hi("GitSignsDelete", { fg = p.red, bg = bg })
 
-    -- Integrations
-    require("miku.integrations.cmp").apply(p)
-    require("miku.integrations.treesitter").apply(p)
-    require("miku.integrations.bufferline").apply(p)
-    require("miku.integrations.whichkey").apply(p)
+    -- Dynamically load integrations
+    for integration, enabled in pairs(opts.integrations) do
+        if enabled then
+            local ok, module = pcall(require, "miku.integrations." .. integration)
+            if ok and module.apply then
+                module.apply(p, opts)
+            end
+        end
+    end
+
+    if type(opts.custom_highlights) == "table" then
+        for group, spec in pairs(opts.custom_highlights) do
+            hi(group, spec)
+        end
+    end
 end
 
 return M
