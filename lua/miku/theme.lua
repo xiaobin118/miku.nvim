@@ -10,8 +10,13 @@ function M.get(colors)
         Cursor = { fg = colors.bg, bg = colors.fg },
         CursorLine = { bg = colors.bg_highlight },
         CursorColumn = { bg = colors.bg_highlight },
+
+        -- Line Numbers (Make relative numbers visible!)
         LineNr = { fg = colors.gray },
+        LineNrAbove = { fg = colors.gray },
+        LineNrBelow = { fg = colors.gray },
         CursorLineNr = { fg = colors.cyan, bold = true },
+
         SignColumn = { bg = colors.bg },
         VertSplit = { fg = colors.border },
         WinSeparator = { fg = colors.border },
@@ -51,10 +56,10 @@ function M.get(colors)
         Error = { fg = colors.red },
         Todo = { fg = colors.bg, bg = colors.yellow, bold = true },
 
-        -- Treesitter
+        -- Treesitter (Legacy / Neovim < 0.10)
         ["@variable"] = { fg = colors.fg },
-        ["@property"] = { fg = colors.fg },
-        ["@field"] = { fg = colors.fg },
+        ["@property"] = { fg = colors.fg_dark },
+        ["@field"] = { fg = colors.fg_dark },
         ["@parameter"] = { fg = colors.orange },
         ["@function"] = { fg = colors.blue },
         ["@function.builtin"] = { fg = colors.cyan },
@@ -63,10 +68,22 @@ function M.get(colors)
         ["@number"] = { fg = colors.orange },
         ["@type"] = { fg = colors.yellow },
         ["@operator"] = { fg = colors.cyan },
-        ["@punctuation.bracket"] = { fg = colors.fg_dark },
-        ["@punctuation.delimiter"] = { fg = colors.fg_dark },
-        ["@module"] = { fg = colors.yellow },
+        ["@punctuation.bracket"] = { fg = colors.gray },
+        ["@punctuation.delimiter"] = { fg = colors.gray },
+        ["@module"] = { fg = colors.fg_dark },
         ["@constructor"] = { fg = colors.blue },
+
+        -- Treesitter (Modern / Neovim >= 0.10) - This fixes your invisible words!
+        ["@variable.member"] = { fg = colors.fg_dark },  -- fixes `capabilities`, `cmd`, `settings`
+        ["@variable.parameter"] = { fg = colors.orange },
+        ["@variable.builtin"] = { fg = colors.magenta }, -- fixes `vim`
+        ["@module.builtin"] = { fg = colors.magenta },   -- fixes `vim` in some contexts
+        ["@property.class"] = { fg = colors.fg_dark },
+        ["@function.method"] = { fg = colors.blue },     -- fixes `nvim_set_keymap`
+        ["@function.method.call"] = { fg = colors.blue },
+        ["@keyword.import"] = { fg = colors.magenta },
+        ["@keyword.function"] = { fg = colors.magenta },
+        ["@keyword.return"] = { fg = colors.magenta },
     }
 
     return groups
