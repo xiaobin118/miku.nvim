@@ -4,7 +4,7 @@ local function link(group, target)
     vim.api.nvim_set_hl(0, group, { link = target })
 end
 
-function M.apply(_p)
+function M.apply()
     link("@punctuation.delimiter", "Operator")
     link("@punctuation.bracket", "Operator")
     link("@property", "Identifier")

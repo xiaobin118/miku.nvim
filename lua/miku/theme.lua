@@ -4,6 +4,10 @@ local function hi(group, spec)
     vim.api.nvim_set_hl(0, group, spec)
 end
 
+local function link(group, target)
+    vim.api.nvim_set_hl(0, group, { link = target })
+end
+
 function M.apply(p, opts)
     local bg = opts.transparent_background and "NONE" or p.bg
     local bg_float = opts.transparent_background and "NONE" or p.bg_float
@@ -25,6 +29,14 @@ function M.apply(p, opts)
     hi("NormalNC", { fg = p.fg2, bg = bg })
     hi("EndOfBuffer", { fg = p.bg, bg = bg }) -- Hides the '~' at end of file
     hi("SignColumn", { bg = bg })
+
+    -- LSP Diagnostics
+    hi("DiagnosticUnderlineError", { undercurl = true, sp = p.red })
+
+    -- Semantic Tokens (Neovim 0.9+)
+    link("@lsp.type.class", "Type")
+    link("@lsp.type.function", "Function")
+    link("@lsp.type.variable", "Identifier")
 
     -- 🔦 Cursors & Selections
     hi("CursorLine", { bg = p.bg_visual })
@@ -49,13 +61,13 @@ function M.apply(p, opts)
 
     -- 🎨 Syntax (Richer mapping)
     hi("Comment", vim.tbl_extend("keep", { fg = p.muted }, c_style))
-    hi("Keyword", vim.tbl_extend("keep", { fg = p.purple }, k_style))    -- Swapped to purple for magic
+    hi("Keyword", vim.tbl_extend("keep", { fg = p.purple }, k_style)) -- Swapped to purple for magic
     hi("Function", vim.tbl_extend("keep", { fg = p.miku }, f_style))
     hi("Identifier", vim.tbl_extend("keep", { fg = p.fg }, v_style))
 
     hi("String", { fg = p.green })
     hi("Number", { fg = p.orange })
-    hi("Boolean", { fg = p.pink, bold = true })    -- Pinks make booleans pop!
+    hi("Boolean", { fg = p.pink, bold = true }) -- Pinks make booleans pop!
     hi("Operator", { fg = p.sky })
     hi("Type", { fg = p.sand })
     hi("Constant", { fg = p.pink })
@@ -86,6 +98,12 @@ function M.apply(p, opts)
                 module.apply(p, opts)
             end
         end
+    end
+
+    local telescope = require("miku.integrations.telescope").get(p)
+    -- Apply telescope highlights
+    for hl, specs in pairs(telescope) do
+        hi(hl, specs)
     end
 
     if type(opts.custom_highlights) == "table" then
