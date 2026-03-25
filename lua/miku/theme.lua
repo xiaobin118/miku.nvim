@@ -1,92 +1,116 @@
 local M = {}
 
----@param colors table
-function M.get(colors)
-    local groups = {
-        -- Base UI
-        Normal = { fg = colors.fg, bg = colors.bg },
-        NormalFloat = { fg = colors.fg, bg = colors.bg_highlight },
-        ColorColumn = { bg = colors.bg_highlight },
-        Cursor = { fg = colors.bg, bg = colors.fg },
-        CursorLine = { bg = colors.bg_highlight },
-        CursorColumn = { bg = colors.bg_highlight },
+local function hi(group, spec)
+    vim.api.nvim_set_hl(0, group, spec)
+end
 
-        -- Line Numbers (Make relative numbers visible!)
-        LineNr = { fg = colors.gray },
-        LineNrAbove = { fg = colors.gray },
-        LineNrBelow = { fg = colors.gray },
-        CursorLineNr = { fg = colors.cyan, bold = true },
+local function link(group, target)
+    vim.api.nvim_set_hl(0, group, { link = target })
+end
 
-        SignColumn = { bg = colors.bg },
-        VertSplit = { fg = colors.border },
-        WinSeparator = { fg = colors.border },
-        Pmenu = { fg = colors.fg, bg = colors.bg_highlight },
-        PmenuSel = { fg = colors.bg, bg = colors.cyan },
-        Search = { fg = colors.bg, bg = colors.yellow },
-        IncSearch = { fg = colors.bg, bg = colors.orange },
-        Visual = { bg = colors.bg_highlight, bold = true },
-        MatchParen = { fg = colors.magenta, bold = true },
+function M.apply(p, opts)
+    local bg = opts.transparent_background and "NONE" or p.bg
+    local bg_float = opts.transparent_background and "NONE" or p.bg_float
+    local bg_dark = opts.transparent_background and "NONE" or p.bg_dark
 
-        -- Standard Syntax
-        Comment = { fg = colors.gray, italic = true },
-        Constant = { fg = colors.orange },
-        String = { fg = colors.green },
-        Character = { fg = colors.green },
-        Number = { fg = colors.orange },
-        Boolean = { fg = colors.orange },
-        Float = { fg = colors.orange },
-        Identifier = { fg = colors.fg },
-        Function = { fg = colors.blue },
-        Statement = { fg = colors.magenta },
-        Conditional = { fg = colors.magenta },
-        Repeat = { fg = colors.magenta },
-        Label = { fg = colors.magenta },
-        Operator = { fg = colors.cyan },
-        Keyword = { fg = colors.cyan, italic = true },
-        Exception = { fg = colors.magenta },
-        PreProc = { fg = colors.cyan },
-        Include = { fg = colors.cyan },
-        Define = { fg = colors.magenta },
-        Macro = { fg = colors.magenta },
-        Type = { fg = colors.yellow },
-        StorageClass = { fg = colors.yellow },
-        Structure = { fg = colors.yellow },
-        Typedef = { fg = colors.yellow },
-        Special = { fg = colors.blue },
-        Error = { fg = colors.red },
-        Todo = { fg = colors.bg, bg = colors.yellow, bold = true },
+    vim.cmd("highlight clear")
+    if vim.fn.exists("syntax_on") == 1 then vim.cmd("syntax reset") end
+    vim.o.termguicolors = true
+    vim.g.colors_name = "miku"
 
-        -- Treesitter (Legacy / Neovim < 0.10)
-        ["@variable"] = { fg = colors.fg },
-        ["@property"] = { fg = colors.fg_dark },
-        ["@field"] = { fg = colors.fg_dark },
-        ["@parameter"] = { fg = colors.orange },
-        ["@function"] = { fg = colors.blue },
-        ["@function.builtin"] = { fg = colors.cyan },
-        ["@keyword"] = { fg = colors.magenta, italic = true },
-        ["@string"] = { fg = colors.green },
-        ["@number"] = { fg = colors.orange },
-        ["@type"] = { fg = colors.yellow },
-        ["@operator"] = { fg = colors.cyan },
-        ["@punctuation.bracket"] = { fg = colors.gray },
-        ["@punctuation.delimiter"] = { fg = colors.gray },
-        ["@module"] = { fg = colors.fg_dark },
-        ["@constructor"] = { fg = colors.blue },
+    -- User styles
+    local c_style = opts.styles.comments or { italic = true }
+    local k_style = opts.styles.keywords or {}
+    local f_style = opts.styles.functions or {}
+    local v_style = opts.styles.variables or {}
 
-        -- Treesitter (Modern / Neovim >= 0.10) - This fixes your invisible words!
-        ["@variable.member"] = { fg = colors.fg_dark },  -- fixes `capabilities`, `cmd`, `settings`
-        ["@variable.parameter"] = { fg = colors.orange },
-        ["@variable.builtin"] = { fg = colors.magenta }, -- fixes `vim`
-        ["@module.builtin"] = { fg = colors.magenta },   -- fixes `vim` in some contexts
-        ["@property.class"] = { fg = colors.fg_dark },
-        ["@function.method"] = { fg = colors.blue },     -- fixes `nvim_set_keymap`
-        ["@function.method.call"] = { fg = colors.blue },
-        ["@keyword.import"] = { fg = colors.magenta },
-        ["@keyword.function"] = { fg = colors.magenta },
-        ["@keyword.return"] = { fg = colors.magenta },
-    }
+    -- 🌌 Core UI
+    hi("Normal", { fg = p.fg, bg = bg })
+    hi("NormalNC", { fg = p.fg2, bg = bg })
+    hi("EndOfBuffer", { fg = p.bg, bg = bg }) -- Hides the '~' at end of file
+    hi("SignColumn", { bg = bg })
 
-    return groups
+    -- LSP Diagnostics
+    hi("DiagnosticUnderlineError", { undercurl = true, sp = p.red })
+
+    -- Semantic Tokens (Neovim 0.9+)
+    link("@lsp.type.class", "Type")
+    link("@lsp.type.function", "Function")
+    link("@lsp.type.variable", "Identifier")
+
+    -- 🔦 Cursors & Selections
+    hi("CursorLine", { bg = p.bg_visual })
+    hi("CursorLineNr", { fg = p.miku, bold = true })
+    hi("LineNr", { fg = p.muted })
+    hi("Visual", { bg = p.bg_visual })
+    hi("Search", { fg = p.bg, bg = p.yellow, bold = true })
+    hi("IncSearch", { fg = p.bg, bg = p.orange, bold = true })
+
+    -- 🪟 Windows, Borders, and Floats (The "Catppuccin" rich UI feel)
+    hi("WinSeparator", { fg = p.border })
+    hi("VertSplit", { fg = p.border })
+    hi("NormalFloat", { fg = p.fg, bg = bg_float })
+    hi("FloatBorder", { fg = p.border_focus, bg = bg_float })
+    hi("FloatTitle", { fg = p.miku, bg = bg_float, bold = true })
+
+    -- 📋 Popup Menus (Autocomplete)
+    hi("Pmenu", { fg = p.fg2, bg = bg_float })
+    hi("PmenuSel", { fg = p.bg, bg = p.miku, bold = true })
+    hi("PmenuSbar", { bg = bg_dark })
+    hi("PmenuThumb", { bg = p.muted })
+
+    -- 🎨 Syntax (Richer mapping)
+    hi("Comment", vim.tbl_extend("keep", { fg = p.muted }, c_style))
+    hi("Keyword", vim.tbl_extend("keep", { fg = p.purple }, k_style)) -- Swapped to purple for magic
+    hi("Function", vim.tbl_extend("keep", { fg = p.miku }, f_style))
+    hi("Identifier", vim.tbl_extend("keep", { fg = p.fg }, v_style))
+
+    hi("String", { fg = p.green })
+    hi("Number", { fg = p.orange })
+    hi("Boolean", { fg = p.pink, bold = true }) -- Pinks make booleans pop!
+    hi("Operator", { fg = p.sky })
+    hi("Type", { fg = p.sand })
+    hi("Constant", { fg = p.pink })
+    hi("Special", { fg = p.yellow })
+    hi("MatchParen", { fg = p.bg, bg = p.miku, bold = true })
+
+    -- 🐛 Diagnostics
+    hi("DiagnosticError", { fg = p.red })
+    hi("DiagnosticWarn", { fg = p.orange })
+    hi("DiagnosticInfo", { fg = p.sky })
+    hi("DiagnosticHint", { fg = p.miku2 })
+
+    hi("DiagnosticVirtualTextError", { fg = p.red, bg = opts.transparent_background and "NONE" or "#2B161B" })
+    hi("DiagnosticVirtualTextWarn", { fg = p.orange, bg = opts.transparent_background and "NONE" or "#2B2118" })
+    hi("DiagnosticVirtualTextInfo", { fg = p.sky, bg = opts.transparent_background and "NONE" or "#162838" })
+    hi("DiagnosticVirtualTextHint", { fg = p.miku2, bg = opts.transparent_background and "NONE" or "#122730" })
+
+    -- 🌿 Git
+    hi("GitSignsAdd", { fg = p.green, bg = bg })
+    hi("GitSignsChange", { fg = p.sand, bg = bg })
+    hi("GitSignsDelete", { fg = p.red, bg = bg })
+
+    -- Dynamically load integrations
+    for integration, enabled in pairs(opts.integrations) do
+        if enabled then
+            local ok, module = pcall(require, "miku.integrations." .. integration)
+            if ok and module.apply then
+                module.apply(p, opts)
+            end
+        end
+    end
+
+    local telescope = require("miku.integrations.telescope").get(p)
+    -- Apply telescope highlights
+    for hl, specs in pairs(telescope) do
+        hi(hl, specs)
+    end
+
+    if type(opts.custom_highlights) == "table" then
+        for group, spec in pairs(opts.custom_highlights) do
+            hi(group, spec)
+        end
+    end
 end
 
 return M
